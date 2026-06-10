@@ -105,4 +105,4 @@ Al ejecutarse el proceso de generación:
 2. Se exporta un reporte estructurado y delimitado por comas (CSV) en la ruta `output/datos_latam.csv` conteniendo las columnas de usuario correspondientes.
 
 ## Autor
-Senior QA Automation Engineer — Prueba técnica Latam QA
+Senior QA Automation Engineer — Latam QA
