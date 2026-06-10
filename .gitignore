@@ -1,0 +1,39 @@
+# Compilados de Java y empaquetados
+*.class
+*.bluej
+*.pkg
+*.ctxt
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Carpetas de construcción
+target/
+out/
+bin/
+
+# Base de datos local SQLite
+*.db
+*.db-journal
+
+# Archivos de registro / Logs
+*.log
+
+# Archivos de reporte locales generados
+output/*.csv
+
+# Configuraciones de Entornos de Desarrollo (IDE)
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+.DS_Store
+
+# NO ignorar config.properties (necesario para pruebas del evaluador)
+!src/main/resources/config.properties
