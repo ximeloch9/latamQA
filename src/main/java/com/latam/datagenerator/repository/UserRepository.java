@@ -185,6 +185,7 @@ public class UserRepository {
         try (Connection conn = dbManager.getConnection();
              Statement stmt = conn.createStatement()) {
             int rows = stmt.executeUpdate(sql);
+            stmt.executeUpdate("VACUUM");
             log.info("Se eliminaron todos los registros de users. Total filas afectadas: {}", rows);
         } catch (SQLException e) {
             log.error("Error al limpiar la tabla users.", e);
@@ -269,6 +270,9 @@ public class UserRepository {
             
             pstmt.setString(1, date);
             int rows = pstmt.executeUpdate();
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("VACUUM");
+            }
             log.info("Se eliminaron {} registros creados antes de: {}", rows, date);
         } catch (SQLException e) {
             log.error("Error al eliminar registros por fecha: {}", date, e);

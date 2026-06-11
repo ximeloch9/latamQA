@@ -83,21 +83,21 @@ data-generator/
    ```
 3. Ejecutar la aplicación parametrizando la cantidad de usuarios ficticios por línea de comando (ejemplo para 20 registros):
    ```bash
-   mvn exec:java -Dexec.mainClass="com.latam.datagenerator.Main" -Dexec.args="20"
+   mvn exec:java -Dexec.mainClass="com.latam.datagenerator.Main"
    ```
 
 ### Opciones del menú
 Al iniciar el aplicativo, se despliega una interfaz interactiva de consola con las siguientes opciones:
-* **[1] Generar nuevos registros**: Inicia la generación automatizada. Permite elegir ejecución secuencial o paralela, guarda en SQLite, exporta a CSV y da la opción de enviar un reporte adjunto por e-mail.
+* **[1] Generar nuevos registros**: Limpia la base de datos y memoria caché para asegurar sincronización total con el CSV de la prueba. Solicita al usuario la cantidad de registros a crear y decide automáticamente si usar ejecución paralela o secuencial según el volumen (paralela para >= 100 registros). Guarda en SQLite, exporta a CSV y da la opción de enviar el reporte por e-mail.
 * **[2] Ver registros existentes en BD**: Recupera de la base de datos local todos los datos y los imprime en consola organizados en formato tabla.
 * **[3] Eliminar todos los registros**: Elimina el historial y todos los datos almacenados en la tabla `users` tras confirmar la operación.
 * **[4] Exportar registros existentes a CSV**: Vuelca la base de datos completa hacia un archivo plano CSV local sin generar nuevos datos ficticios.
 * **[5] Salir**: Cierra las conexiones activas con la base de datos SQLite y finaliza el programa de manera segura.
-
+ 
 ## Bonus implementados
-- [x] **Ejecución en paralelo**: Generación multihilo concurrente utilizando `ExecutorService` con hilos basados en los núcleos activos del CPU y conjuntos concurrentes (`ConcurrentHashMap.newKeySet()`) para preservar la integridad de unicidad en memoria.
+- [x] **Ejecución en paralelo**: Generación multihilo concurrente utilizando `ExecutorService` con hilos basados en los núcleos activos del CPU y conjuntos concurrentes (`ConcurrentHashMap.newKeySet()`) para preservar la integridad de unicidad en memoria. Se activa automáticamente cuando la cantidad a generar es igual o superior a 100 registros.
 - [x] **Gestión de datos históricos**: Métodos de administración para consulta y eliminación por antigüedad (`deleteByCreatedBefore`), además de visualización interactiva y vaciado completo.
-- [x] **Envío por correo**: Soporte de cliente SMTP integrado con **JavaMail API** para enviar el reporte de datos a cualquier casilla de correo electrónico (se requiere configurar las credenciales y establecer `mail.enabled=true` en [config.properties](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/resources/config.properties)).
+- [x] **Envío por correo**: Soporte de cliente SMTP integrado con **JavaMail API** para enviar el reporte de datos a cualquier casilla de correo electrónico. Ya se encuentra configurado y habilitado por defecto usando Gmail SMTP en [config.properties](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/resources/config.properties).
 
 ## Resultado esperado
 Al ejecutarse el proceso de generación:

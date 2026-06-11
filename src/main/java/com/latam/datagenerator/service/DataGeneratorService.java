@@ -275,4 +275,16 @@ public class DataGeneratorService {
     public MailSender getMailSender() {
         return mailSender;
     }
+
+    /**
+     * Limpia la caché en memoria para garantizar que el nuevo lote de datos no choque con nada
+     * y empiece en un estado totalmente fresco.
+     */
+    public void clearMemoryCache() {
+        synchronized (this) {
+            usedDocuments.clear();
+            usedFullNames.clear();
+        }
+        log.info("Caché de unicidad en memoria restablecida.");
+    }
 }

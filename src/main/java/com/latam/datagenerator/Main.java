@@ -66,14 +66,33 @@ public class Main {
 
             switch (option) {
                 case "1":
-                    System.out.println("\n¿Desea usar generación paralela (hilos)? (s/n): ");
-                    String parallelOpt = scanner.nextLine().trim();
+                    // Limpiar base de datos e historial en memoria para sincronizar base de datos y CSV con datos frescos
+                    userRepository.deleteAll();
+                    generatorService.clearMemoryCache();
+
+                    System.out.print("\n¿Cuántos registros desea generar? (Enter para usar el valor por defecto: " + defaultQuantity + "): ");
+                    String quantityInput = scanner.nextLine().trim();
+                    int quantityToGenerate = defaultQuantity;
+                    if (!quantityInput.isEmpty()) {
+                        try {
+                            int parsed = Integer.parseInt(quantityInput);
+                            if (parsed > 0) {
+                                quantityToGenerate = parsed;
+                            } else {
+                                System.out.println("Cantidad inválida. Se usará el valor por defecto: " + defaultQuantity);
+                            }
+                        } catch (NumberFormatException e) {
+                            System.out.println("Valor no numérico. Se usará el valor por defecto: " + defaultQuantity);
+                        }
+                    }
+                    System.out.println("Generando " + quantityToGenerate + " registros...");
+
                     List<AbstractUser> newUsers;
-                    
-                    if (parallelOpt.equalsIgnoreCase("s")) {
-                        newUsers = generatorService.generateUsersParallel(defaultQuantity);
+                    // Decidir automáticamente el modo de generación sin preguntar al usuario
+                    if (quantityToGenerate >= 100) {
+                        newUsers = generatorService.generateUsersParallel(quantityToGenerate);
                     } else {
-                        newUsers = generatorService.generateUsers(defaultQuantity);
+                        newUsers = generatorService.generateUsers(quantityToGenerate);
                     }
                     
                     // Exportar a CSV inmediatamente
