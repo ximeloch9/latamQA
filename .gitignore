@@ -1,4 +1,8 @@
-# Compilados de Java y empaquetados
+# Maven binario (herramienta externa)
+apache-maven-3.8.8/
+
+# Compilados y empaquetados de Java/Maven
+**/target/
 *.class
 *.bluej
 *.pkg
@@ -11,12 +15,7 @@
 *.tar.gz
 *.rar
 
-# Carpetas de construcción
-target/
-out/
-bin/
-
-# Base de datos local SQLite
+# Bases de datos SQLite locales y temporales
 *.db
 *.db-journal
 
@@ -24,9 +23,12 @@ bin/
 *.log
 
 # Archivos de reporte locales generados
-output/*.csv
+**/output/*.csv
 
-# Configuraciones de Entornos de Desarrollo (IDE)
+# Copias de seguridad temporales fuera de Git (por si acaso)
+LatamQAPOC_backup/
+
+# Configuraciones de Entornos de Desarrollo (IDEs)
 .idea/
 *.iml
 .classpath
@@ -35,5 +37,5 @@ output/*.csv
 .vscode/
 .DS_Store
 
-# NO ignorar config.properties (necesario para pruebas del evaluador)
-!src/main/resources/config.properties
+# NO ignorar config.properties en el subproyecto (necesario para pruebas)
+!**/src/main/resources/config.properties
