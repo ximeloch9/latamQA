@@ -216,46 +216,36 @@ public class UserRepository {
      * Busca usuarios según el tipo de usuario (NATURAL_MINOR, NATURAL_ADULT, COMPANY).
      */
     public List<UserRecord> findByUserType(String userType) {
-        String sql = "SELECT id, name, last_name, age, document_id, city, country, language, user_type "
-                   + "FROM users WHERE user_type = ?";
-        List<UserRecord> list = new ArrayList<>();
-
-        try (Connection conn = dbManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, userType);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapRowToRecord(rs));
-                }
-            }
-            log.info("Se recuperaron {} usuarios del tipo {}", list.size(), userType);
-        } catch (SQLException e) {
-            log.error("Error al filtrar por UserType: {}", userType, e);
-        }
-        return list;
+        return findByField("user_type", userType);
     }
 
     /**
      * Busca usuarios según el país.
      */
     public List<UserRecord> findByCountry(String country) {
+        return findByField("country", country);
+    }
+
+    /**
+     * DRY: método genérico de búsqueda por columna y valor. Úsco lugar donde reside la lógica SQL de filtro.
+     */
+    private List<UserRecord> findByField(String column, String value) {
         String sql = "SELECT id, name, last_name, age, document_id, city, country, language, user_type "
-                   + "FROM users WHERE country = ?";
+                   + "FROM users WHERE " + column + " = ?";
         List<UserRecord> list = new ArrayList<>();
 
         try (Connection conn = dbManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, country);
+
+            pstmt.setString(1, value);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRowToRecord(rs));
                 }
             }
-            log.info("Se recuperaron {} usuarios del país {}", list.size(), country);
+            log.info("Se recuperaron {} registros con {}={}", list.size(), column, value);
         } catch (SQLException e) {
-            log.error("Error al filtrar por país: {}", country, e);
+            log.error("Error al filtrar por {}={}", column, value, e);
         }
         return list;
     }
