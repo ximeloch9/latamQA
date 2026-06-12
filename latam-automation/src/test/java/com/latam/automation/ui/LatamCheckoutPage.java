@@ -6,10 +6,10 @@ import org.openqa.selenium.By;
 public class LatamCheckoutPage {
 
     public static final Target CHEAPEST_FLIGHT = Target.the("Tarifa mas economica de la lista de vuelos")
-            .located(By.xpath("(//span[contains(text(), 'COP') or contains(text(), 'USD') or contains(text(), '$')])[1] | //button[contains(@class, 'FlightCard')]"));
+            .locatedBy("//*[@data-testid='wrapper-card-header-0']");
 
-    public static final Target CABIN_TARIF_SELECT = Target.the("Boton seleccionar tarifa cabina")
-            .located(By.xpath("//button[contains(@id, 'tarif') or contains(@id, 'select-flight') or contains(text(), 'Seleccionar')]"));
+    public static final Target CABIN_TARIF_SELECT = Target.the("seleccionar tarifa")
+            .locatedBy("//*[@data-testid='bundle-detail-0-flight-select']");
 
     public static final Target FIRST_NAME_INPUT = Target.the("Campo Nombre del Pasajero")
             .located(By.cssSelector("[data-testid='passengerDetails-firstName-ADT_1-textfield-input']"));
@@ -25,4 +25,7 @@ public class LatamCheckoutPage {
 
     public static final Target SUBMIT_PASSENGER_FORM = Target.the("Boton guardar o continuar en checkout")
             .located(By.cssSelector("[data-testid='passengerFormSubmitButtonADT_1']"));
+
+    public static final Target ERROR_MESSAGES = Target.the("Mensajes de error en el formulario")
+            .located(By.cssSelector(".error-message, [class*='ErrorMessage'], .invalid-feedback, [class*='invalid']"));
 }
