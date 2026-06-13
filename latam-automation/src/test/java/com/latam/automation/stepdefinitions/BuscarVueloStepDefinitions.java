@@ -16,7 +16,12 @@ import net.serenitybdd.screenplay.abilities.BrowseTheWeb;
 import net.serenitybdd.screenplay.actions.Open;
 import net.serenitybdd.screenplay.actors.OnStage;
 import net.serenitybdd.screenplay.actors.OnlineCast;
+import net.serenitybdd.screenplay.waits.WaitUntil;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.WrapsDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +60,49 @@ public class BuscarVueloStepDefinitions {
     public void cargarUsuario(String tipoUsuario) {
         testUser = DataHelper.getUsuarioPorTipo(tipoUsuario);
         theActorCalled(ACTOR_NAME).can(BrowseTheWeb.with(herBrowser));
+        inyectarStealthViaCDP(herBrowser);
+    }
+
+    /**
+     * Inyecta un script de stealth via CDP (Page.addScriptToEvaluateOnNewDocument).
+     * Este script se ejecuta ANTES de que cada página cargue su propio JavaScript,
+     * ocultando las huellas de Selenium/WebDriver que LATAM usa para detectar bots.
+     */
+    private void inyectarStealthViaCDP(WebDriver driver) {
+        try {
+            // Desempaquetar el driver real (Serenity envuelve con WebDriverFacade)
+            WebDriver rawDriver = driver;
+            while (rawDriver instanceof WrapsDriver) {
+                rawDriver = ((WrapsDriver) rawDriver).getWrappedDriver();
+            }
+            if (!(rawDriver instanceof ChromeDriver)) return;
+
+            ChromeDriver chromeDriver = (ChromeDriver) rawDriver;
+            String stealthScript =
+                // Ocultar navigator.webdriver (la señal más detectada)
+                "Object.defineProperty(navigator, 'webdriver', {get: () => undefined, configurable: true});" +
+                // Poblar window.chrome con propiedades reales (ausentes en Selenium por defecto)
+                "if (!window.chrome) { window.chrome = {}; }" +
+                "window.chrome.runtime = window.chrome.runtime || {};" +
+                "window.chrome.app = window.chrome.app || { isInstalled: false };" +
+                "window.chrome.csi = window.chrome.csi || function(){return {};};" +
+                "window.chrome.loadTimes = window.chrome.loadTimes || function(){return {};};" +
+                // Simular plugins como en un Chrome real (incognito tiene 0 plugins)
+                "Object.defineProperty(navigator, 'plugins', {" +
+                "  get: () => { var arr = [1,2,3]; arr.item = (i) => arr[i]; arr.namedItem = (n) => null; arr.refresh = () => {}; return arr; }," +
+                "  configurable: true" +
+                "});" +
+                // Lenguajes del navegador coherentes con Colombia
+                "Object.defineProperty(navigator, 'languages', {get: () => ['es-CO', 'es', 'en-US', 'en'], configurable: true});";
+
+            chromeDriver.executeCdpCommand(
+                "Page.addScriptToEvaluateOnNewDocument",
+                Map.of("source", stealthScript)
+            );
+            log.info("[Stealth] CDP script inyectado correctamente en el navegador.");
+        } catch (Exception e) {
+            log.warn("[Stealth] No se pudo inyectar CDP stealth: {}. Continuando sin el.", e.getMessage());
+        }
     }
 
     @Cuando("el actor ingresa al portal de Latam en Colombia")
@@ -123,42 +171,72 @@ public class BuscarVueloStepDefinitions {
 
     @Entonces("la página de resultados debe cargarse correctamente respetando la moneda y el idioma del usuario")
     public void verificarPortalRegional() {
-        String pais = testUser.get("country");
+        // 1. Esperar primero a que la página de resultados cargue por completo
+        verificarCargaResultados();
 
-        // Verificación de idioma/moneda regional según el país cargado usando Text.of
-        if ("Peru".equalsIgnoreCase(pais)) {
+        String pais = testUser.get("country");
+        // Normalizar tildes (ej. Perú -> Peru)
+        String paisNorm = pais != null ? pais.replace("ú", "u").replace("Ú", "U") : "";
+
+        // 2. Ejecutar las aserciones regionales con el DOM ya cargado
+        if ("Peru".equalsIgnoreCase(paisNorm)) {
             theActorInTheSpotlight().should(
                     seeThat(Text.of(LatamSearchPage.REGIONAL_SELECTOR), Matchers.containsString("PE")),
                     seeThat(Text.of(LatamSearchPage.CURRENT_CURRENCY), Matchers.containsString("USD")));
-        } else if ("Chile".equalsIgnoreCase(pais)) {
+        } else if ("Chile".equalsIgnoreCase(paisNorm)) {
             theActorInTheSpotlight().should(
                     seeThat(Text.of(LatamSearchPage.REGIONAL_SELECTOR), Matchers.containsString("CL")),
                     seeThat(Text.of(LatamSearchPage.CURRENT_CURRENCY), Matchers.containsString("CLP")));
-        } else if ("Ecuador".equalsIgnoreCase(pais)) {
+        } else if ("Ecuador".equalsIgnoreCase(paisNorm)) {
             theActorInTheSpotlight().should(
                     seeThat(Text.of(LatamSearchPage.REGIONAL_SELECTOR), Matchers.containsString("EC")),
                     seeThat(Text.of(LatamSearchPage.CURRENT_CURRENCY), Matchers.containsString("USD")));
-        } else if ("Brasil".equalsIgnoreCase(pais) || "Brazil".equalsIgnoreCase(pais)) {
+        } else if ("Brasil".equalsIgnoreCase(paisNorm) || "Brazil".equalsIgnoreCase(paisNorm)) {
             theActorInTheSpotlight().should(
                     seeThat(Text.of(LatamSearchPage.REGIONAL_SELECTOR), Matchers.containsString("BR")),
                     seeThat(Text.of(LatamSearchPage.CURRENT_CURRENCY), Matchers.containsString("BRL")));
         }
-
-        verificarCargaResultados();
     }
 
     /**
      * DRY: verificación compartida de que la pantalla de resultados cargó
-     * correctamente.
+     * correctamente. Incluye retry si LATAM muestra "La búsqueda está tardando".
      */
     private void verificarCargaResultados() {
+        WebDriver driver = BrowseTheWeb.as(theActorInTheSpotlight()).getDriver();
+        boolean encontrado = false;
+        int intentos = 0;
+        final int MAX_INTENTOS = 2;
+
+        while (!encontrado && intentos < MAX_INTENTOS) {
+            try {
+                theActorInTheSpotlight().attemptsTo(
+                        WaitUntil.the(LatamCheckoutPage.CHEAPEST_FLIGHT, isVisible())
+                                .forNoMoreThan(30).seconds());
+                encontrado = true;
+            } catch (Exception e) {
+                intentos++;
+                log.warn("Intento {} de {}: vuelo no visible. Verificando boton de reintento de LATAM...", intentos, MAX_INTENTOS);
+                if (intentos < MAX_INTENTOS) {
+                    // Buscar y presionar "Realizar otra búsqueda" si LATAM muestra la pantalla de error
+                    try {
+                        java.util.List<WebElement> botones = driver.findElements(
+                                By.cssSelector("[data-testid='search-again-button'],button[class*='SearchAgain']"));
+                        if (!botones.isEmpty()) {
+                            log.info("Clic en 'Realizar otra busqueda' de LATAM...");
+                            botones.get(0).click();
+                            Thread.sleep(8000);
+                        }
+                    } catch (Exception retryEx) {
+                        log.warn("No se pudo hacer reintento: {}", retryEx.getMessage());
+                    }
+                }
+            }
+        }
+
+        // Aserción final: falla el test si después de los reintentos no hay resultados
         theActorInTheSpotlight().should(
                 seeThat(the(LatamCheckoutPage.CHEAPEST_FLIGHT), isVisible()));
-        try {
-            Thread.sleep(7000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     @Y("busca un vuelo de ida en Latam")

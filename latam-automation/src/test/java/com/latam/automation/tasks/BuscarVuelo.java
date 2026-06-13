@@ -26,15 +26,8 @@ import java.util.Properties;
 
 import static net.serenitybdd.screenplay.Tasks.instrumented;
 import static net.serenitybdd.screenplay.matchers.WebElementStateMatchers.isVisible;
-import static net.serenitybdd.screenplay.matchers.WebElementStateMatchers.isNotVisible;
 
 public class BuscarVuelo implements Task {
-
-    private static final Target ORIGIN_AUTOCOMPLETE_OPTION = Target.the("primera opción origen")
-            .locatedBy("//*[contains(@data-testid,'--autocomplete__listitem--menuitem__label-content')][1]");
-
-    private static final Target DESTINATION_AUTOCOMPLETE_OPTION = Target.the("primera opción destino")
-            .locatedBy("//*[contains(@data-testid,'--autocomplete__listitem--menuitem__label-content')][1]");
 
     private final String origen;
     private final String destino;
@@ -64,154 +57,105 @@ public class BuscarVuelo implements Task {
         return instrumented(BuscarVuelo.class, origen, destino, soloIda, null, null, false);
     }
 
-    public static BuscarVuelo conParametrosYFechas(String origen, String destino, boolean soloIda, String fechaIda,
-            String fechaVuelta) {
+    public static BuscarVuelo conParametrosYFechas(String origen, String destino, boolean soloIda, String fechaIda, String fechaVuelta) {
         return instrumented(BuscarVuelo.class, origen, destino, soloIda, fechaIda, fechaVuelta, false);
     }
 
-    public static BuscarVuelo conParametrosYFechasYPasajeros(String origen, String destino, boolean soloIda, String fechaIda,
-            String fechaVuelta, boolean incluirNino) {
+    public static BuscarVuelo conParametrosYFechasYPasajeros(String origen, String destino, boolean soloIda, String fechaIda, String fechaVuelta, boolean incluirNino) {
         return instrumented(BuscarVuelo.class, origen, destino, soloIda, fechaIda, fechaVuelta, incluirNino);
-    }
-
-    private String buildDismissScript() {
-        Properties props = new Properties();
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream("overlays.properties")) {
-            if (in == null) {
-                return "/* overlays.properties no encontrado */";
-            }
-            props.load(in);
-        } catch (IOException e) {
-            return "/* Error al leer overlays.properties */";
-        }
-
-        String selectors = props.getProperty("overlay.selectors", "");
-        StringBuilder js = new StringBuilder();
-
-        // Intentar hacer CLICK real en el botón de aceptar cookies para que se guarden las cookies de consentimiento en el navegador
-        js.append("try {");
-        js.append("var acceptBtn=document.querySelector('#onetrust-accept-btn-handler, [id^=\"onetrust-accept\"], #btn-cookie-accept');");
-        js.append("if(acceptBtn){acceptBtn.click();}");
-        js.append("} catch(e) {}");
-
-        js.append("try {");
-        if (!selectors.isBlank()) {
-            for (String sel : selectors.split(",")) {
-                String s = sel.trim();
-                if (!s.isEmpty()) {
-                    js.append("var el=document.querySelector('").append(s.replace("'", "\\'")).append("');")
-                            .append("if(el)el.style.display='none';");
-                }
-            }
-        }
-        js.append("} catch(e) {}");
-
-        js.append("try {")
-                .append("var b=document.querySelector('#country-lang-selector-continue-button');")
-                .append("if(b)b.click();")
-                .append("} catch(e) {}");
-
-        js.append("try {")
-                .append("var b=document.querySelector('#country-suggestion--dialog__close-button');")
-                .append("if(b)b.click();")
-                .append("} catch(e) {}");
-
-        js.append("try {")
-                .append("var b=document.querySelector('#button-close-login-incentive');")
-                .append("if(b)b.click();")
-                .append("} catch(e) {}");
-
-        return js.toString();
     }
 
     @Override
     public <T extends Actor> void performAs(T actor) {
+        descartarOverlaysIniciales(actor);
+        seleccionarTipoViaje(actor);
+        ingresarRutaViaje(actor);
+        seleccionarFechas(actor);
+        
+        if (incluirNino) {
+            agregarPasajeroNino(actor);
+        }
+        
+        ejecutarBusquedaYCambiarFoco(actor);
+    }
+
+    private void descartarOverlaysIniciales(Actor actor) {
+        esperar(3000);
         try {
             WebDriver driver = BrowseTheWeb.as(actor).getDriver();
             JavascriptExecutor js = (JavascriptExecutor) driver;
-
             js.executeScript(buildDismissScript());
-
-            try {
-                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
-                wait.until(ExpectedConditions.invisibilityOfElementLocated(
-                        By.cssSelector("#country-lang-selector-continue-button, " +
-                                "#country-suggestion--dialog__close-button, " +
-                                "#button-close-login-incentive")));
-            } catch (Exception waitEx) {
-                // Silencioso
-            }
-        } catch (Exception e) {
-            // Silencioso
+            
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(
+                    By.cssSelector("#country-lang-selector-continue-button, " +
+                            "#country-suggestion--dialog__close-button, " +
+                            "#button-close-login-incentive")));
+        } catch (Exception ignored) {
+            // Manejo silencioso de overlays opcionales
         }
+    }
 
-        if (soloIda) {
-            actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.ONE_WAY_RADIO));
-        } else {
-            actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.ROUND_TRIP_RADIO));
-        }
+    private void seleccionarTipoViaje(Actor actor) {
+        Target radioTipo = soloIda ? LatamSearchPage.ONE_WAY_RADIO : LatamSearchPage.ROUND_TRIP_RADIO;
+        actor.attemptsTo(JavaScriptClick.on(radioTipo));
         esperar(AutomationConfig.DELAY_TIPO_VIAJE_MS);
+    }
 
+    private void ingresarRutaViaje(Actor actor) {
         // Ingresar Origen
         actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.ORIGIN_INPUT));
         escribirComoHumano(actor, LatamSearchPage.ORIGIN_INPUT, origen);
-        
-        // Espera condicional: continúa tan pronto como el autocompletar sea visible
-        actor.attemptsTo(
-                WaitUntil.the(ORIGIN_AUTOCOMPLETE_OPTION, isVisible()).forNoMoreThan(8).seconds());
-        actor.attemptsTo(
-                JavaScriptClick.on(ORIGIN_AUTOCOMPLETE_OPTION));
-        // Espera condicional: continúa tan pronto como el autocompletar desaparezca (opción seleccionada)
-        actor.attemptsTo(
-                WaitUntil.the(ORIGIN_AUTOCOMPLETE_OPTION, isNotVisible()).forNoMoreThan(5).seconds());
-        esperar(AutomationConfig.DELAY_AUTOCOMPLETE_MS);
+        seleccionarOpcionAutocompletar(actor, LatamSearchPage.ORIGIN_AUTOCOMPLETE_OPTION);
 
         // Ingresar Destino
         actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.DESTINATION_INPUT));
         escribirComoHumano(actor, LatamSearchPage.DESTINATION_INPUT, destino);
-        
-        actor.attemptsTo(
-                WaitUntil.the(DESTINATION_AUTOCOMPLETE_OPTION, isVisible()).forNoMoreThan(8).seconds());
-        actor.attemptsTo(
-                JavaScriptClick.on(DESTINATION_AUTOCOMPLETE_OPTION));
-        actor.attemptsTo(
-                WaitUntil.the(DESTINATION_AUTOCOMPLETE_OPTION, isNotVisible()).forNoMoreThan(5).seconds());
-        esperar(AutomationConfig.DELAY_AUTOCOMPLETE_MS);
+        seleccionarOpcionAutocompletar(actor, LatamSearchPage.DESTINATION_AUTOCOMPLETE_OPTION);
+    }
 
-        // Fechas
+    private void seleccionarOpcionAutocompletar(Actor actor, Target targetOption) {
+        actor.attemptsTo(
+                WaitUntil.the(targetOption, isVisible()).forNoMoreThan(8).seconds(),
+                Click.on(targetOption)
+        );
+        esperar(AutomationConfig.DELAY_AUTOCOMPLETE_MS);
+    }
+
+    private void seleccionarFechas(Actor actor) {
         DateTimeFormatter iso = DateTimeFormatter.ISO_LOCAL_DATE;
         String fIda = (this.fechaIda != null) ? this.fechaIda : LocalDate.now().plusDays(7).format(iso);
         String fVuelta = (this.fechaVuelta != null) ? this.fechaVuelta : LocalDate.now().plusDays(14).format(iso);
 
         seleccionarFechaEnCalendario(actor, fIda, LatamSearchPage.DEPARTURE_DATE_INPUT);
         esperar(AutomationConfig.DELAY_FECHA_MS);
+        
         if (!soloIda) {
             seleccionarFechaEnCalendario(actor, fVuelta, LatamSearchPage.RETURN_DATE_INPUT);
             esperar(AutomationConfig.DELAY_FECHA_MS);
         }
+    }
 
-        if (incluirNino) {
-            actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.PASSENGERS_TRIGGER));
+    private void agregarPasajeroNino(Actor actor) {
+        actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.PASSENGERS_TRIGGER));
+        esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
+        try {
+            WebDriver driver = BrowseTheWeb.as(actor).getDriver();
+            WebElementFacade element = LatamSearchPage.CHILDREN_ADD_BUTTON.resolveFor(actor);
+            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
+            esperar(1000);
+            actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.CHILDREN_ADD_BUTTON));
             esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
-            try {
-                WebDriver driver = BrowseTheWeb.as(actor).getDriver();
-                WebElementFacade element = LatamSearchPage.CHILDREN_ADD_BUTTON.resolveFor(actor);
-                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
-                esperar(1000);
-                actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.CHILDREN_ADD_BUTTON));
-                esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
-            } catch (Exception e) {
-                actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.CHILDREN_ADD_BUTTON));
-                esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
-            }
-            actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.PASSENGERS_TRIGGER));
+        } catch (Exception e) {
+            actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.CHILDREN_ADD_BUTTON));
             esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
         }
+        actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.PASSENGERS_TRIGGER));
+        esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
+    }
 
-        actor.attemptsTo(
-                JavaScriptClick.on(LatamSearchPage.SEARCH_BUTTON));
-
-        // Esperar a que abra la nueva pestaña y cambiar foco
+    private void ejecutarBusquedaYCambiarFoco(Actor actor) {
+        actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.SEARCH_BUTTON));
         try {
             WebDriver driver = BrowseTheWeb.as(actor).getDriver();
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(AutomationConfig.TIMEOUT_NUEVA_PESTANA_SEG));
@@ -224,11 +168,26 @@ public class BuscarVuelo implements Task {
                     .orElseThrow();
 
             driver.switchTo().window(nuevaPestana);
-
-            // Forzar a Serenity a reconocer la nueva pestaña
             ((JavascriptExecutor) driver).executeScript("return document.readyState");
             esperar(AutomationConfig.DELAY_NUEVA_PESTANA_MS);
+            dismissarOverlaysEnResultados(driver);
+        } catch (Exception ignored) {
+            // Manejo silencioso de fallo al cambiar pestaña
+        }
+    }
 
+    private void dismissarOverlaysEnResultados(WebDriver driver) {
+        try {
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            esperar(2000);
+            js.executeScript(
+                    "try { var c=document.querySelector('#onetrust-accept-btn-handler,[id^=onetrust-accept]'); if(c)c.click(); } catch(e) {}" +
+                            "try { var b=document.querySelector('[data-testid*=currency-dialog] button,[data-testid*=keep-currency],[data-testid*=continue-currency],[id*=currency-continue],[class*=CurrencyModal] button'); if(b)b.click(); } catch(e) {}" +
+                            "try { var b=document.querySelector('#country-lang-selector-continue-button'); if(b)b.click(); } catch(e) {}" +
+                            "try { var b=document.querySelector('#country-suggestion--dialog__close-button'); if(b)b.click(); } catch(e) {}" +
+                            "try { var b=document.querySelector('#button-close-login-incentive'); if(b)b.click(); } catch(e) {}" +
+                            "try { var b=document.querySelector('[aria-label=Close],[aria-label*=cerrar],[aria-label*=Cerrar]'); if(b)b.click(); } catch(e) {}"
+            );
         } catch (Exception ignored) {
             // Silencioso
         }
@@ -276,5 +235,54 @@ public class BuscarVuelo implements Task {
         }
 
         actor.attemptsTo(Click.on(botonFecha));
+    }
+
+    private String buildDismissScript() {
+        Properties props = new Properties();
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("overlays.properties")) {
+            if (in == null) {
+                return "/* overlays.properties no encontrado */";
+            }
+            props.load(in);
+        } catch (IOException e) {
+            return "/* Error al leer overlays.properties */";
+        }
+
+        String selectors = props.getProperty("overlay.selectors", "");
+        StringBuilder js = new StringBuilder();
+
+        js.append("try {");
+        js.append("var acceptBtn=document.querySelector('#onetrust-accept-btn-handler, [id^=\"onetrust-accept\"], #btn-cookie-accept');");
+        js.append("if(acceptBtn){acceptBtn.click();}");
+        js.append("} catch(e) {}");
+
+        js.append("try {");
+        if (!selectors.isBlank()) {
+            for (String sel : selectors.split(",")) {
+                String s = sel.trim();
+                if (!s.isEmpty()) {
+                    js.append("var el=document.querySelector('").append(s.replace("'", "\\'")).append("');")
+                            .append("if(el)el.style.display='none';");
+                }
+            }
+        }
+        js.append("} catch(e) {}");
+
+        js.append("try {")
+                .append("var b=document.querySelector('#country-lang-selector-continue-button');")
+                .append("if(b)b.click();")
+                .append("} catch(e) {}");
+
+        js.append("try {")
+                .append("var b=document.querySelector('#country-suggestion--dialog__close-button');")
+                .append("if(b)b.click();")
+                .append("} catch(e) {}");
+
+        js.append("try {")
+                .append("var b=document.querySelector('#button-close-login-incentive');")
+                .append("if(b)b.click();")
+                .append("} catch(e) {}");
+
+        return js.toString();
     }
 }

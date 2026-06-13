@@ -86,6 +86,23 @@ public class SeleccionarVuelo implements Task {
         } catch (Exception ignored) {
             // El modal de tarifa no siempre aparece
         }
+
+        // Click en el botón de continuar en el carrito/pie de página para ir a asientos o checkout
+        Target botonContinuarCarrito = Target.the("Boton continuar del carrito o pie de pagina")
+                .locatedBy("//button[contains(@id,'continue') or contains(@data-testid,'continue') or contains(.,'Continuar') or contains(.,'Ir a') or contains(.,'Siguiente') or contains(.,'Confirmar')]");
+
+        for (int i = 0; i < 3; i++) {
+            try {
+                esperar(2000);
+                if (botonContinuarCarrito.resolveFor(actor).isCurrentlyVisible()) {
+                    actor.attemptsTo(JavaScriptClick.on(botonContinuarCarrito));
+                } else {
+                    break;
+                }
+            } catch (Exception e) {
+                break;
+            }
+        }
     }
 
     /**

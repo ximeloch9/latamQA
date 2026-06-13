@@ -28,8 +28,9 @@ Para iniciar la ejecución de las pruebas:
    ```
 
 2. **Ejecutar el comando de Maven**:
+   *Se recomienda limpiar el perfil de prueba para evitar cookies corruptas o bloqueadas y luego ejecutar:*
    ```bash
-   mvn clean verify
+   rm -rf .chrome-profile && mvn clean verify
    ```
    *Nota: Por defecto, la suite está configurada para ejecutarse usando Chrome en modo **headless** (según se define en `src/test/resources/serenity.conf`).*
 
@@ -48,3 +49,23 @@ Para iniciar la ejecución de las pruebas:
 > Para mitigar esto y ver las interacciones completas, se recomienda:
 > - Ejecutar en tu entorno local sin la opción `--headless` en `serenity.conf`.
 > - Apuntar las pruebas a un ambiente de desarrollo (Staging o Sandbox) provisto por la aerolínea con las restricciones de seguridad deshabilitadas.
+
+---
+
+## Estrategias Anti-Bot y Configuración de Navegador
+
+Para mitigar el bloqueo por detección de bots ("La búsqueda está tardando más de lo normal") en el portal de LATAM, el framework implementa las siguientes estrategias en `serenity.conf` y los steps:
+
+1. **Perfil Persistente (`--user-data-dir`)**:
+   - Evita el uso del modo incógnito por defecto. En modo incógnito, la CDN (Akamai) bloquea con mayor agresividad al detectar sesiones 100% limpias (sin cookies de consentimiento previas ni historial).
+   - El perfil persistente guarda el estado y cookies de sesiones exitosas. Si deseas limpiar el caché manualmente, puedes borrar el directorio antes de iniciar:
+     ```bash
+     rm -rf .chrome-profile
+     ```
+2. **User-Agent Dinámico (Evitar v126 fijo)**:
+   - **No debes usar un User-Agent fijo desactualizado (como v126)** si tu Chrome local se ha actualizado a una versión superior (por ejemplo, v149).
+   - Los sistemas anti-bot comparan las capacidades reales de la API de JavaScript de tu motor de Chrome con la firma declarada en el User-Agent. Si hay inconsistencia, te identifican inmediatamente como bot.
+   - Al omitir el argumento `--user-agent` en la configuración de Serenity, Chrome autogenera su User-Agent nativo real, asegurando que coincida al 100% con tu versión del navegador.
+3. **Inyección de Sigilo (CDP Stealth)**:
+   - Se inyecta un script en el navegador antes de cada carga de página usando Chrome DevTools Protocol (CDP) para enmascarar `navigator.webdriver = false` y emular variables nativas de Chrome.
+
