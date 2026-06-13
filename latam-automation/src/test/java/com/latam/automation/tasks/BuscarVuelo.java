@@ -5,10 +5,12 @@ import com.latam.automation.util.AutomationConfig;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Task;
 import net.serenitybdd.screenplay.abilities.BrowseTheWeb;
+import net.serenitybdd.screenplay.actions.Click;
 import net.serenitybdd.screenplay.actions.Enter;
 import net.serenitybdd.screenplay.actions.JavaScriptClick;
 import net.serenitybdd.screenplay.waits.WaitUntil;
 import net.serenitybdd.screenplay.targets.Target;
+import net.serenitybdd.core.pages.WebElementFacade;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -39,26 +41,37 @@ public class BuscarVuelo implements Task {
     private final boolean soloIda;
     private final String fechaIda;
     private final String fechaVuelta;
+    private final boolean incluirNino;
 
-    public BuscarVuelo(String origen, String destino, boolean soloIda, String fechaIda, String fechaVuelta) {
+    public BuscarVuelo(String origen, String destino, boolean soloIda, String fechaIda, String fechaVuelta, boolean incluirNino) {
         this.origen = origen;
         this.destino = destino;
         this.soloIda = soloIda;
         this.fechaIda = fechaIda;
         this.fechaVuelta = fechaVuelta;
+        this.incluirNino = incluirNino;
+    }
+
+    public BuscarVuelo(String origen, String destino, boolean soloIda, String fechaIda, String fechaVuelta) {
+        this(origen, destino, soloIda, fechaIda, fechaVuelta, false);
     }
 
     public BuscarVuelo(String origen, String destino, boolean soloIda) {
-        this(origen, destino, soloIda, null, null);
+        this(origen, destino, soloIda, null, null, false);
     }
 
     public static BuscarVuelo conParametros(String origen, String destino, boolean soloIda) {
-        return instrumented(BuscarVuelo.class, origen, destino, soloIda);
+        return instrumented(BuscarVuelo.class, origen, destino, soloIda, null, null, false);
     }
 
     public static BuscarVuelo conParametrosYFechas(String origen, String destino, boolean soloIda, String fechaIda,
             String fechaVuelta) {
-        return instrumented(BuscarVuelo.class, origen, destino, soloIda, fechaIda, fechaVuelta);
+        return instrumented(BuscarVuelo.class, origen, destino, soloIda, fechaIda, fechaVuelta, false);
+    }
+
+    public static BuscarVuelo conParametrosYFechasYPasajeros(String origen, String destino, boolean soloIda, String fechaIda,
+            String fechaVuelta, boolean incluirNino) {
+        return instrumented(BuscarVuelo.class, origen, destino, soloIda, fechaIda, fechaVuelta, incluirNino);
     }
 
     private String buildDismissScript() {
@@ -140,9 +153,9 @@ public class BuscarVuelo implements Task {
         esperar(AutomationConfig.DELAY_TIPO_VIAJE_MS);
 
         // Ingresar Origen
-        actor.attemptsTo(
-                JavaScriptClick.on(LatamSearchPage.ORIGIN_INPUT),
-                Enter.theValue(origen).into(LatamSearchPage.ORIGIN_INPUT));
+        actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.ORIGIN_INPUT));
+        escribirComoHumano(actor, LatamSearchPage.ORIGIN_INPUT, origen);
+        
         // Espera condicional: continúa tan pronto como el autocompletar sea visible
         actor.attemptsTo(
                 WaitUntil.the(ORIGIN_AUTOCOMPLETE_OPTION, isVisible()).forNoMoreThan(8).seconds());
@@ -154,9 +167,9 @@ public class BuscarVuelo implements Task {
         esperar(AutomationConfig.DELAY_AUTOCOMPLETE_MS);
 
         // Ingresar Destino
-        actor.attemptsTo(
-                JavaScriptClick.on(LatamSearchPage.DESTINATION_INPUT),
-                Enter.theValue(destino).into(LatamSearchPage.DESTINATION_INPUT));
+        actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.DESTINATION_INPUT));
+        escribirComoHumano(actor, LatamSearchPage.DESTINATION_INPUT, destino);
+        
         actor.attemptsTo(
                 WaitUntil.the(DESTINATION_AUTOCOMPLETE_OPTION, isVisible()).forNoMoreThan(8).seconds());
         actor.attemptsTo(
@@ -175,6 +188,24 @@ public class BuscarVuelo implements Task {
         if (!soloIda) {
             seleccionarFechaEnCalendario(actor, fVuelta, LatamSearchPage.RETURN_DATE_INPUT);
             esperar(AutomationConfig.DELAY_FECHA_MS);
+        }
+
+        if (incluirNino) {
+            actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.PASSENGERS_TRIGGER));
+            esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
+            try {
+                WebDriver driver = BrowseTheWeb.as(actor).getDriver();
+                WebElementFacade element = LatamSearchPage.CHILDREN_ADD_BUTTON.resolveFor(actor);
+                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
+                esperar(1000);
+                actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.CHILDREN_ADD_BUTTON));
+                esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
+            } catch (Exception e) {
+                actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.CHILDREN_ADD_BUTTON));
+                esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
+            }
+            actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.PASSENGERS_TRIGGER));
+            esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
         }
 
         actor.attemptsTo(
@@ -203,6 +234,22 @@ public class BuscarVuelo implements Task {
         }
     }
 
+    private void escribirComoHumano(Actor actor, Target target, String texto) {
+        try {
+            WebElementFacade element = target.resolveFor(actor);
+            element.clear();
+            for (char c : texto.toCharArray()) {
+                element.sendKeys(String.valueOf(c));
+                long range = AutomationConfig.MAX_DELAY_TECLA_MS - AutomationConfig.MIN_DELAY_TECLA_MS;
+                long delay = AutomationConfig.MIN_DELAY_TECLA_MS + (long) (Math.random() * range);
+                esperar(delay);
+            }
+            esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
+        } catch (Exception e) {
+            actor.attemptsTo(Enter.theValue(texto).into(target));
+        }
+    }
+
     private void esperar(long milis) {
         try {
             Thread.sleep(milis);
@@ -212,14 +259,15 @@ public class BuscarVuelo implements Task {
     }
 
     private void seleccionarFechaEnCalendario(Actor actor, String fechaISO, Target inputCampo) {
-        actor.attemptsTo(JavaScriptClick.on(inputCampo));
+        actor.attemptsTo(Click.on(inputCampo));
+        esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
 
         Target botonFecha = LatamSearchPage.botonFechaCalendario(fechaISO);
 
         int intentosMaximos = 12;
         while (!botonFecha.resolveFor(actor).isCurrentlyVisible() && intentosMaximos > 0) {
             if (LatamSearchPage.NEXT_MONTH_BUTTON.resolveFor(actor).isCurrentlyVisible()) {
-                actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.NEXT_MONTH_BUTTON));
+                actor.attemptsTo(Click.on(LatamSearchPage.NEXT_MONTH_BUTTON));
                 esperar(500);
             } else {
                 break;
@@ -227,6 +275,6 @@ public class BuscarVuelo implements Task {
             intentosMaximos--;
         }
 
-        actor.attemptsTo(JavaScriptClick.on(botonFecha));
+        actor.attemptsTo(Click.on(botonFecha));
     }
 }

@@ -1,8 +1,12 @@
 package com.latam.automation.util;
 
+import com.latam.datagenerator.repository.DatabaseManager;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +17,6 @@ import org.slf4j.LoggerFactory;
 public class DataHelper {
 
     private static final Logger log = LoggerFactory.getLogger(DataHelper.class);
-    private static final String DB_URL = "jdbc:sqlite:../data-generator/data-generator.db";
     private static final String CSV_PATH = "../data-generator/output/datos_latam.csv";
 
     private static void normalizarCiudad(Map<String, String> usuario, String tipo) {
@@ -35,7 +38,7 @@ public class DataHelper {
         try {
             usuario = getUsuarioDesdeBD(tipo);
         } catch (Exception e) {
-        log.warn("No se pudo conectar a la base de datos SQLite. Intentando CSV... Error: {}", e.getMessage());
+            log.warn("No se pudo conectar a la base de datos SQLite. Intentando CSV... Error: {}", e.getMessage());
         }
 
         // 2. Fallback a CSV
@@ -50,7 +53,7 @@ public class DataHelper {
     }
 
     private static Map<String, String> getUsuarioDesdeBD(String tipo) throws SQLException {
-        try (Connection conn = DriverManager.getConnection(DB_URL)) {
+        try (Connection conn = DatabaseManager.getInstance().getConnection()) {
             String sql = "SELECT * FROM users WHERE user_type = ? ORDER BY RANDOM() LIMIT 1";
             String targetType = mapearTipo(tipo);
             
