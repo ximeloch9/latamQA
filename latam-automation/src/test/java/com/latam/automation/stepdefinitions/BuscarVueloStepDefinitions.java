@@ -3,6 +3,10 @@ package com.latam.automation.stepdefinitions;
 import com.latam.automation.tasks.BuscarVuelo;
 import com.latam.automation.tasks.IngresarPasajero;
 import com.latam.automation.tasks.SeleccionarVuelo;
+import com.latam.automation.tasks.SeleccionarTarifaReembolsable;
+import com.latam.automation.tasks.ElegirAsientosMasTarde;
+import com.latam.automation.tasks.OmitirServiciosAdicionales;
+import com.latam.automation.tasks.ConfirmarCarrito;
 import com.latam.automation.ui.LatamCheckoutPage;
 import com.latam.automation.ui.LatamSearchPage;
 import com.latam.automation.util.DataHelper;
@@ -253,6 +257,30 @@ public class BuscarVueloStepDefinitions {
     public void seleccionarTarifa() {
         theActorInTheSpotlight().attemptsTo(
                 SeleccionarVuelo.deLaLista());
+    }
+
+    @Y("selecciona la opcion de continuar con tarifa reembolsable")
+    public void seleccionarTarifaReembolsable() {
+        theActorInTheSpotlight().attemptsTo(
+                SeleccionarTarifaReembolsable.deVuelo());
+    }
+
+    @Y("elige los asientos mas tarde y de manera aleatoria")
+    public void elegirAsientosMasTarde() {
+        theActorInTheSpotlight().attemptsTo(
+                ElegirAsientosMasTarde.enElMapa());
+    }
+
+    @Y("continua sin servicios adicionales de equipaje y embarque prioritario")
+    public void omitirServiciosAdicionales() {
+        theActorInTheSpotlight().attemptsTo(
+                OmitirServiciosAdicionales.enElCheckout());
+    }
+
+    @Y("confirma el carrito a datos de pasajeros")
+    public void confirmarCarritoPasajeros() {
+        theActorInTheSpotlight().attemptsTo(
+                ConfirmarCarrito.enElCheckout());
     }
 
     @Y("completa los datos del pasajero menor en el Checkout")

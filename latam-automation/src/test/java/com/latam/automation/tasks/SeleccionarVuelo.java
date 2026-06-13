@@ -9,6 +9,7 @@ import net.serenitybdd.screenplay.actions.JavaScriptClick;
 import net.serenitybdd.screenplay.targets.Target;
 import net.serenitybdd.screenplay.waits.WaitUntil;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -27,8 +28,7 @@ public class SeleccionarVuelo implements Task {
      * Selector del botón "Realizar otra búsqueda" que muestra LATAM
      * cuando la búsqueda de vuelos falla o tarda demasiado.
      */
-    private static final String SELECTOR_ERROR_BUSQUEDA =
-            "[data-testid='search-again-button'], " +
+    private static final String SELECTOR_ERROR_BUSQUEDA = "[data-testid='search-again-button'], " +
             "button[class*='SearchAgain'], " +
             "a[href*='search']";
 
@@ -87,9 +87,11 @@ public class SeleccionarVuelo implements Task {
             // El modal de tarifa no siempre aparece
         }
 
-        // Click en el botón de continuar en el carrito/pie de página para ir a asientos o checkout
+        // Click en el botón de continuar en el carrito/pie de página para ir a asientos
+        // o checkout
         Target botonContinuarCarrito = Target.the("Boton continuar del carrito o pie de pagina")
-                .locatedBy("//button[contains(@id,'continue') or contains(@data-testid,'continue') or contains(.,'Continuar') or contains(.,'Ir a') or contains(.,'Siguiente') or contains(.,'Confirmar')]");
+                .locatedBy(
+                        "//button[contains(@id,'continue') or contains(@data-testid,'continue') or contains(.,'Continuar') or contains(.,'Ir a') or contains(.,'Siguiente') or contains(.,'Confirmar')]");
 
         for (int i = 0; i < 3; i++) {
             try {
@@ -103,12 +105,15 @@ public class SeleccionarVuelo implements Task {
                 break;
             }
         }
+
     }
 
     /**
      * Intenta recuperarse de la pantalla de error de LATAM haciendo clic en
-     * el botón "Realizar otra búsqueda". Retorna true si el botón fue encontrado y clickeado.
-     * Este método NO vuelve a llenar el formulario; LATAM recarga la búsqueda original
+     * el botón "Realizar otra búsqueda". Retorna true si el botón fue encontrado y
+     * clickeado.
+     * Este método NO vuelve a llenar el formulario; LATAM recarga la búsqueda
+     * original
      * automáticamente al hacer clic en ese botón.
      */
     private boolean intentarRecuperarBusqueda(Actor actor) {

@@ -104,10 +104,12 @@ public class BuscarVuelo implements Task {
 
     private void ingresarRutaViaje(Actor actor) {
         // Ingresar Origen
+        actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.ORIGIN_INPUT));
         escribirComoHumano(actor, LatamSearchPage.ORIGIN_INPUT, origen);
         seleccionarOpcionAutocompletar(actor, LatamSearchPage.ORIGIN_AUTOCOMPLETE_OPTION);
 
         // Ingresar Destino
+        actor.attemptsTo(JavaScriptClick.on(LatamSearchPage.DESTINATION_INPUT));
         escribirComoHumano(actor, LatamSearchPage.DESTINATION_INPUT, destino);
         seleccionarOpcionAutocompletar(actor, LatamSearchPage.DESTINATION_AUTOCOMPLETE_OPTION);
     }
@@ -194,17 +196,13 @@ public class BuscarVuelo implements Task {
     private void escribirComoHumano(Actor actor, Target target, String texto) {
         try {
             WebElementFacade element = target.resolveFor(actor);
-            // Forzar el clic nativo en el elemento para ganar foco real y activar listeners de React
-            element.click();
+            
+            // Limpiar el campo usando acordes de teclado en vez de .clear(), para que React detecte el cambio de estado.
+            // Se envían comandos de selección para Windows/Linux (CONTROL) y macOS (COMMAND).
+            element.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
+            element.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.COMMAND, "a"));
+            element.sendKeys(org.openqa.selenium.Keys.BACK_SPACE);
             esperar(500);
-
-            // Limpiar el campo usando acordes de teclado en vez de .clear(), para que React detecte el cambio de estado
-            String valorActual = element.getValue();
-            if (valorActual != null && !valorActual.isEmpty()) {
-                element.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
-                element.sendKeys(org.openqa.selenium.Keys.BACK_SPACE);
-                esperar(500);
-            }
 
             for (char c : texto.toCharArray()) {
                 element.sendKeys(String.valueOf(c));

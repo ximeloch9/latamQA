@@ -64,7 +64,20 @@ public class IngresarPasajero implements Task {
     private void escribirComoHumano(Actor actor, Target target, String texto) {
         try {
             WebElementFacade element = target.resolveFor(actor);
-            element.clear();
+            try {
+                element.click();
+            } catch (Exception clickEx) {
+                actor.attemptsTo(JavaScriptClick.on(target));
+            }
+            esperar(500);
+            
+            // Limpiar el campo usando acordes de teclado en vez de .clear(), para que React detecte el cambio de estado.
+            // Se envían comandos de selección para Windows/Linux (CONTROL) y macOS (COMMAND).
+            element.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));
+            element.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.COMMAND, "a"));
+            element.sendKeys(org.openqa.selenium.Keys.BACK_SPACE);
+            esperar(500);
+
             for (char c : texto.toCharArray()) {
                 element.sendKeys(String.valueOf(c));
                 long range = AutomationConfig.MAX_DELAY_TECLA_MS - AutomationConfig.MIN_DELAY_TECLA_MS;
@@ -73,7 +86,13 @@ public class IngresarPasajero implements Task {
             }
             esperar(AutomationConfig.DELAY_HUMANO_CAMPO_MS);
         } catch (Exception e) {
-            actor.attemptsTo(Enter.theValue(texto).into(target));
+            // Fallback seguro que evita .clear() implícito para no lanzar "invalid element state"
+            try {
+                WebElementFacade element = target.resolveFor(actor);
+                element.sendKeys(texto);
+            } catch (Exception ex) {
+                actor.attemptsTo(Enter.theValue(texto).into(target));
+            }
         }
     }
 
