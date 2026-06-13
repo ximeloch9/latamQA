@@ -79,10 +79,10 @@ public class SeleccionarVuelo implements Task {
 
         // Si aparece el modal de selección de tarifa, seleccionar la primera
         try {
-            if (LatamCheckoutPage.CABIN_TARIF_SELECT.resolveFor(actor).isVisible()) {
-                actor.attemptsTo(
-                        JavaScriptClick.on(LatamCheckoutPage.CABIN_TARIF_SELECT));
-            }
+            actor.attemptsTo(
+                    WaitUntil.the(LatamCheckoutPage.CABIN_TARIF_SELECT, isVisible()).forNoMoreThan(5).seconds(),
+                    JavaScriptClick.on(LatamCheckoutPage.CABIN_TARIF_SELECT)
+            );
         } catch (Exception ignored) {
             // El modal de tarifa no siempre aparece
         }

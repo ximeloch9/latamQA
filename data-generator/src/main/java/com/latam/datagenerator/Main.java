@@ -7,6 +7,7 @@ import com.latam.datagenerator.model.UserType;
 import com.latam.datagenerator.repository.DatabaseManager;
 import com.latam.datagenerator.repository.UserRepository;
 import com.latam.datagenerator.service.DataGeneratorService;
+import com.latam.datagenerator.service.DocumentGeneratorService;
 import com.latam.datagenerator.util.CsvExporter;
 import com.latam.datagenerator.util.MailSender;
 import java.util.ArrayList;
@@ -44,7 +45,8 @@ public class Main {
 
         CsvExporter csvExporter = new CsvExporter();
         MailSender mailSender = new MailSender();
-        DataGeneratorService generatorService = new DataGeneratorService(userRepository, csvExporter, mailSender);
+        DocumentGeneratorService documentGenerator = new DocumentGeneratorService();
+        DataGeneratorService generatorService = new DataGeneratorService(userRepository, csvExporter, mailSender, documentGenerator);
 
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;

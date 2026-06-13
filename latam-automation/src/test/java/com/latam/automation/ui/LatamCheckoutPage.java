@@ -11,21 +11,59 @@ public class LatamCheckoutPage {
     public static final Target CABIN_TARIF_SELECT = Target.the("seleccionar tarifa")
             .locatedBy("//*[@data-testid='bundle-detail-0-flight-select']");
 
-    public static final Target FIRST_NAME_INPUT = Target.the("Campo Nombre del Pasajero")
-            .located(By.cssSelector("[data-testid*='passengerDetails-firstName']"));
+    // Selectores dinámicos basados en el sufijo del pasajero (ej. ADT_1, CHD_1)
+    public static Target firstNameInput(String suffix) {
+        return Target.the("Campo Nombre del Pasajero " + suffix)
+                .located(By.id("passengerDetails-firstName-" + suffix));
+    }
 
-    public static final Target LAST_NAME_INPUT = Target.the("Campo Apellido del Pasajero")
-            .located(By.cssSelector("[data-testid*='passengerDetails-lastName']"));
+    public static Target lastNameInput(String suffix) {
+        return Target.the("Campo Apellido del Pasajero " + suffix)
+                .located(By.id("passengerDetails-lastName-" + suffix));
+    }
 
-    public static final Target DOCUMENT_TYPE_SELECT = Target.the("Select de Tipo de Documento")
-            .located(By.xpath("//select[contains(@name, 'documentType') or contains(@id, 'document-type')]"));
+    public static Target documentTypeSelect(String suffix) {
+        return Target.the("Select de Tipo de Documento del Pasajero " + suffix)
+                .located(By.xpath("//select[contains(@id, 'documentType') or contains(@id, 'document-type') or contains(@id, 'document')] [contains(@id, '" + suffix + "')]"));
+    }
 
-    public static final Target DOCUMENT_NUMBER_INPUT = Target.the("Campo Numero de Documento")
-            .located(By.xpath("//input[contains(@name, 'documentNumber') or contains(@id, 'document-number') or contains(@name, 'dni')]"));
+    public static Target documentNumberInput(String suffix) {
+        return Target.the("Campo Numero de Documento del Pasajero " + suffix)
+                .located(By.id("documentInfo-documentNumber-" + suffix));
+    }
 
-    public static final Target SUBMIT_PASSENGER_FORM = Target.the("Boton guardar o continuar en checkout")
-            .located(By.cssSelector("[data-testid*='passengerFormSubmitButton']"));
+    public static Target birthDateInput(String suffix) {
+        return Target.the("Campo Fecha de Nacimiento del Pasajero " + suffix)
+                .located(By.id("passengerInfo-dateOfBirth-" + suffix));
+    }
+
+    public static Target emailInput(String suffix) {
+        return Target.the("Campo Email del Pasajero " + suffix)
+                .located(By.id("passengerInfo-emails-" + suffix));
+    }
+
+    public static Target phoneInput(String suffix) {
+        return Target.the("Campo Telefono del Pasajero " + suffix)
+                .located(By.id("passengerInfo-phones0-number-" + suffix));
+    }
+
+    public static Target submitPassengerForm(String suffix) {
+        return Target.the("Boton guardar o continuar del Pasajero " + suffix)
+                .located(By.id("passengerFormSubmitButton" + suffix));
+    }
+
+    public static Target passengerHeader(String suffix) {
+        return Target.the("Acordeon o Cabecera del Pasajero " + suffix)
+                .located(By.xpath("//*[contains(@id, 'passenger-') or contains(@id, 'accordion') or contains(@id, 'header') or contains(@class, 'header')][contains(@id, '" + suffix + "') or contains(@class, '" + suffix + "')]"));
+    }
+
+    // Botón general de "Continuar" para avanzar a la pantalla de pago (data-testid='undefined-button')
+    public static final Target CONTINUAR_BUTTON = Target.the("Boton general Continuar a Pago")
+            .located(By.cssSelector("[data-testid='undefined-button'], button[id*='continue'], button[class*='Continue']"));
 
     public static final Target ERROR_MESSAGES = Target.the("Mensajes de error en el formulario")
             .located(By.cssSelector(".error-message, [class*='ErrorMessage'], .invalid-feedback, [class*='invalid']"));
+
+    public static final Target PAYMENT_HEADER = Target.the("Cabecera o titulo de Pago")
+            .locatedBy("//h1[contains(.,'pago') or contains(.,'Pago') or contains(.,'Paga') or contains(.,'paga') or contains(.,'Pagar') or contains(.,'confirmar') or contains(.,'Resumen') or contains(@id,'payment')]");
 }

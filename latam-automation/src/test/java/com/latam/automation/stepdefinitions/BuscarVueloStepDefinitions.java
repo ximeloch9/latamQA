@@ -294,6 +294,14 @@ public class BuscarVueloStepDefinitions {
         // Verificar que no se muestren alertas de error visibles en los campos
         theActorInTheSpotlight().should(
                 seeThat(the(LatamCheckoutPage.ERROR_MESSAGES), isNotVisible()));
+        
+        // Registro informativo opcional de la navegación a la siguiente pantalla
+        try {
+            if (LatamCheckoutPage.PAYMENT_HEADER.resolveFor(theActorInTheSpotlight()).isCurrentlyVisible()) {
+                log.info("[Éxito] Navegación confirmada a la pantalla de pago.");
+            }
+        } catch (Exception ignored) {}
+
         log.info("Datos de documento del menor validados con exito: {}", testUser.get("documentId"));
     }
 }

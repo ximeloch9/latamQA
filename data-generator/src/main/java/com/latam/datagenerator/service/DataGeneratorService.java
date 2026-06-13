@@ -43,11 +43,11 @@ public class DataGeneratorService {
     /**
      * Constructor con inyección de dependencias.
      */
-    public DataGeneratorService(UserRepository userRepository, CsvExporter csvExporter, MailSender mailSender) {
+    public DataGeneratorService(UserRepository userRepository, CsvExporter csvExporter, MailSender mailSender, DocumentGeneratorService documentGenerator) {
         this.userRepository = userRepository;
         this.csvExporter = csvExporter;
         this.mailSender = mailSender;
-        this.documentGenerator = new DocumentGeneratorService();
+        this.documentGenerator = documentGenerator;
         this.faker = new Faker(new Locale("es"));
         
         // Inicializar sets thread-safe por si se usa paralelismo

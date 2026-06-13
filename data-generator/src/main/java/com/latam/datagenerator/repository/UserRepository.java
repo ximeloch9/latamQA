@@ -142,7 +142,10 @@ public class UserRepository {
 
     /**
      * Retorna verdadero si el documento ya se encuentra registrado.
+     * 
+     * @deprecated YAGNI: Validación duplicada de lo que hace el Set en memoria.
      */
+    @Deprecated
     public boolean existsDocument(String doc) {
         String sql = "SELECT 1 FROM users WHERE document_id = ? LIMIT 1";
         try (Connection conn = dbManager.getConnection();
@@ -160,7 +163,10 @@ public class UserRepository {
 
     /**
      * Retorna verdadero si la combinación de Nombre y Apellido ya existe.
+     * 
+     * @deprecated YAGNI: Validación duplicada de lo que hace el Set en memoria.
      */
+    @Deprecated
     public boolean existsFullName(String name, String lastName) {
         String sql = "SELECT 1 FROM users WHERE name = ? AND last_name = ? LIMIT 1";
         try (Connection conn = dbManager.getConnection();
@@ -252,7 +258,10 @@ public class UserRepository {
 
     /**
      * Elimina registros creados antes de una fecha dada (formato esperado: yyyy-MM-dd HH:mm:ss).
+     * 
+     * @deprecated YAGNI: No expuesto en ningún menú ni servicio.
      */
+    @Deprecated
     public void deleteByCreatedBefore(String date) {
         String sql = "DELETE FROM users WHERE created_at < ?";
         try (Connection conn = dbManager.getConnection();

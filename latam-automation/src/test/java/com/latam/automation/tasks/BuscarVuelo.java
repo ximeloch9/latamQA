@@ -197,6 +197,13 @@ public class BuscarVuelo implements Task {
         try {
             WebElementFacade element = target.resolveFor(actor);
             
+            try {
+                element.click();
+            } catch (Exception clickEx) {
+                actor.attemptsTo(JavaScriptClick.on(target));
+            }
+            esperar(500);
+            
             // Limpiar el campo usando acordes de teclado en vez de .clear(), para que React detecte el cambio de estado.
             // Se envían comandos de selección para Windows/Linux (CONTROL) y macOS (COMMAND).
             element.sendKeys(org.openqa.selenium.Keys.chord(org.openqa.selenium.Keys.CONTROL, "a"));

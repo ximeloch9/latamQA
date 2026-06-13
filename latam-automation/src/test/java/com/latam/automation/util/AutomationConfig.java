@@ -14,13 +14,13 @@ public final class AutomationConfig {
     // ── Esperas de formulario de búsqueda (simulan comportamiento humano)
     // ──────────
     /** Pausa tras seleccionar el tipo de viaje antes de continuar al origen */
-    public static final long DELAY_TIPO_VIAJE_MS = 1000;
+    public static final long DELAY_TIPO_VIAJE_MS = 800;
 
     /** Pausa tras seleccionar la opción del autocompletar de origen o destino */
     public static final long DELAY_AUTOCOMPLETE_MS = 1000;
 
     /** Pausa tras seleccionar cada fecha antes de continuar */
-    public static final long DELAY_FECHA_MS = 2000;
+    public static final long DELAY_FECHA_MS = 1200;
 
     /** Rango mínimo de retardo entre pulsaciones de teclas (en ms) para simular escritura humana */
     public static final long MIN_DELAY_TECLA_MS = 80;
@@ -37,7 +37,7 @@ public final class AutomationConfig {
     public static final int TIMEOUT_NUEVA_PESTANA_SEG = 25;
 
     /** Pausa inicial tras cambiar a la nueva pestaña (carga del DOM base) */
-    public static final long DELAY_NUEVA_PESTANA_MS = 10000;
+    public static final long DELAY_NUEVA_PESTANA_MS = 3000;
 
     /** Segundos máximos para que aparezca el primer vuelo en resultados */
     public static final int TIMEOUT_PRIMER_VUELO_SEG = 30;

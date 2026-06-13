@@ -1,5 +1,7 @@
 # Data Generator — Latam QA POC
 
+> **Referencia de reglas:** Todas las clases y métodos de este módulo deben cumplir con las directrices definidas en [`agent.md`](file:///Users/Marlopch/Documents/LatamQAPOC/agent.md) (SOLID, DRY, KISS, YAGNI, SLF4J, Java 17).
+
 ## Descripción
 Data Generator es una herramienta diseñada para la generación robusta de datos de prueba de personas naturales y empresas para Latam Airlines. Su propósito principal es alimentar los entornos de pruebas automatizadas QA mediante la creación dinámica de registros únicos, validados bajo estrictas reglas de negocio comerciales de aerolíneas, y permitir su persistencia local en SQLite y su exportación hacia archivos CSV listos para ser consumidos.
 
@@ -39,26 +41,26 @@ data-generator/
 ### Pilares OOP
 | Pilar | Clase | Descripción breve |
 | :--- | :--- | :--- |
-| **Abstracción** | [AbstractUser](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/AbstractUser.java) | Expone una plantilla base abstrayendo los atributos y declarando métodos abstractos (`validate()`, `generateDocument()`). |
-| **Encapsulamiento** | [AbstractUser](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/AbstractUser.java) | Oculta el estado interno mediante atributos privados y expone accesores controlados (Getters y Setters). |
-| **Herencia** | [NaturalPersonUser](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/NaturalPersonUser.java) / [CompanyUser](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/CompanyUser.java) | Reutilizan los atributos comunes y amplían los comportamientos definidos en la clase abstracta padre. |
-| **Polimorfismo** | [CompanyUser](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/CompanyUser.java) | Sobrescribe de forma personalizada métodos como `getLastName()` para asegurar el apellido vacío y define su propia generación de documentos. |
+| **Abstracción** | [AbstractUser](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/AbstractUser.java) | Expone una plantilla base abstrayendo los atributos y declarando métodos abstractos (`validate()`, `generateDocument()`). |
+| **Encapsulamiento** | [AbstractUser](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/AbstractUser.java) | Oculta el estado interno mediante atributos privados y expone accesores controlados (Getters y Setters). |
+| **Herencia** | [NaturalPersonUser](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/NaturalPersonUser.java) / [CompanyUser](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/CompanyUser.java) | Reutilizan los atributos comunes y amplían los comportamientos definidos en la clase abstracta padre. |
+| **Polimorfismo** | [CompanyUser](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/CompanyUser.java) | Sobrescribe de forma personalizada métodos como `getLastName()` para asegurar el apellido vacío y define su propia generación de documentos. |
 
 ### Patrones de diseño
 | Patrón | Clase | Descripción breve |
 | :--- | :--- | :--- |
-| **Factory** | [UserFactory](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/factory/UserFactory.java) | Centraliza e independiza la instanciación de objetos `NaturalPersonUser` y `CompanyUser` basándose en el tipo de usuario. |
-| **Builder** | [UserBuilder](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/builder/UserBuilder.java) | Permite construir instancias de `AbstractUser` de forma fluida paso a paso con asignaciones altamente legibles. |
-| **Singleton** | [DatabaseManager](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/repository/DatabaseManager.java) | Garantiza una única instancia del administrador de conexiones hacia la base de datos SQLite. |
+| **Factory** | [UserFactory](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/factory/UserFactory.java) | Centraliza e independiza la instanciación de objetos `NaturalPersonUser` y `CompanyUser` basándose en el tipo de usuario. |
+| **Builder** | [UserBuilder](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/builder/UserBuilder.java) | Permite construir instancias de `AbstractUser` de forma fluida paso a paso con asignaciones altamente legibles. |
+| **Singleton** | [DatabaseManager](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/repository/DatabaseManager.java) | Garantiza una única instancia del administrador de conexiones hacia la base de datos SQLite. |
 
 ### Principios SOLID
 | Principio | Dónde se aplica | Cómo se aplica |
 | :--- | :--- | :--- |
-| **S** (Single Responsibility) | [UserRecord](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/UserRecord.java) / [DocumentGeneratorService](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/service/DocumentGeneratorService.java) | Cada clase tiene un único motivo de cambio (UserRecord es un simple DTO y DocumentGeneratorService solo genera caracteres de documentos). |
-| **O** (Open/Closed) | [AbstractUser](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/AbstractUser.java) | Está abierta para que se creen nuevas clases de usuario (como corporaciones internacionales o viajeros frecuentes) pero cerrada a la modificación de su diseño core. |
-| **L** (Liskov Substitution) | [NaturalPersonUser](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/NaturalPersonUser.java) | Se pueden emplear instancias de las subclases indiferentemente en lugar del tipo base `AbstractUser` sin romper el código cliente. |
-| **I** (Interface Segregation) | [Validatable](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/Validatable.java) y [Documentable](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/model/Documentable.java) | Interfaces pequeñas y enfocadas a una sola acción, evitando interfaces gordas con métodos que las subclases no implementan. |
-| **D** (Dependency Inversion) | [DataGeneratorService](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/java/com/latam/datagenerator/service/DataGeneratorService.java) | Depende de la abstracción `UserRepository` e inyecta sus utilidades en lugar de instanciar componentes concretos acoplados. |
+| **S** (Single Responsibility) | [UserRecord](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/UserRecord.java) / [DocumentGeneratorService](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/service/DocumentGeneratorService.java) | Cada clase tiene un único motivo de cambio (UserRecord es un simple DTO y DocumentGeneratorService solo genera caracteres de documentos). |
+| **O** (Open/Closed) | [AbstractUser](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/AbstractUser.java) | Está abierta para que se creen nuevas clases de usuario (como corporaciones internacionales o viajeros frecuentes) pero cerrada a la modificación de su diseño core. |
+| **L** (Liskov Substitution) | [NaturalPersonUser](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/NaturalPersonUser.java) | Se pueden emplear instancias de las subclases indiferentemente en lugar del tipo base `AbstractUser` sin romper el código cliente. |
+| **I** (Interface Segregation) | [Validatable](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/Validatable.java) y [Documentable](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/model/Documentable.java) | Interfaces pequeñas y enfocadas a una sola acción, evitando interfaces gordas con métodos que las subclases no implementan. |
+| **D** (Dependency Inversion) | [DataGeneratorService](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/java/com/latam/datagenerator/service/DataGeneratorService.java) | Depende de la abstracción `UserRepository` e inyecta sus utilidades en lugar de instanciar componentes concretos acoplados. |
 
 ## Reglas de negocio implementadas
 1. **Rango de Edad**: Las personas naturales deben tener edades comprendidas estrictamente entre 11 y 79 años (mayores o menores).
@@ -97,7 +99,7 @@ Al iniciar el aplicativo, se despliega una interfaz interactiva de consola con l
 ## Bonus implementados
 - [x] **Ejecución en paralelo**: Generación multihilo concurrente utilizando `ExecutorService` con hilos basados en los núcleos activos del CPU y conjuntos concurrentes (`ConcurrentHashMap.newKeySet()`) para preservar la integridad de unicidad en memoria. Se activa automáticamente cuando la cantidad a generar es igual o superior a 100 registros.
 - [x] **Gestión de datos históricos**: Métodos de administración para consulta y eliminación por antigüedad (`deleteByCreatedBefore`), además de visualización interactiva y vaciado completo.
-- [x] **Envío por correo**: Soporte de cliente SMTP integrado con **JavaMail API** para enviar el reporte de datos a cualquier casilla de correo electrónico. Ya se encuentra configurado y habilitado por defecto usando Gmail SMTP en [config.properties](file:///Users/Marlopch/.gemini/antigravity-ide/scratch/data-generator/src/main/resources/config.properties).
+- [x] **Envío por correo**: Soporte de cliente SMTP integrado con **JavaMail API** para enviar el reporte de datos a cualquier casilla de correo electrónico. Ya se encuentra configurado y habilitado por defecto usando Gmail SMTP en [config.properties](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/resources/config.properties).
 
 ## Resultado esperado
 Al ejecutarse el proceso de generación:
@@ -106,3 +108,16 @@ Al ejecutarse el proceso de generación:
 
 ## Autor
 Senior QA Automation Engineer — Latam QA
+
+---
+
+## 📝 Convención de commits (§11 agent.md)
+
+```
+feat(data-generator): agregar soporte para generación de usuarios extranjeros
+fix(repository): corregir validación de unicidad de documentos en memoria
+refactor(service): extraer findByField para eliminar duplicación DRY
+chore(pom): actualizar compiler target a Java 17
+```
+
+Tipos válidos: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `style`.
