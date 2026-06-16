@@ -37,8 +37,9 @@ public class CompanyUser extends AbstractUser {
 
     /**
      * Genera un número de documento válido para una Empresa.
-     * Regla: Debe iniciar con "9" y tener longitud libre.
+     * Regla de validación: Debe iniciar con '9' y tener longitud libre. Sin embargo, la implementación de generación de datos ficticios genera una longitud fija de 9 dígitos.
      */
+    // CÓDIGO MUERTO (YAGNI): este método no se invoca en ningún punto de la aplicación; ver DocumentGeneratorService.
     @Override
     public String generateDocument() {
         // Genera un número de documento aleatorio de 9 dígitos que comienza con '9'

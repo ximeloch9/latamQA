@@ -233,7 +233,7 @@ public class UserRepository {
     }
 
     /**
-     * DRY: método genérico de búsqueda por columna y valor. Úsco lugar donde reside la lógica SQL de filtro.
+     * DRY: método genérico de búsqueda por columna y valor. Único lugar donde reside la lógica SQL de filtro.
      */
     private List<UserRecord> findByField(String column, String value) {
         String sql = "SELECT id, name, last_name, age, document_id, city, country, language, user_type "

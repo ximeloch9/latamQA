@@ -19,6 +19,7 @@ public class NaturalPersonUser extends AbstractUser {
     /**
      * Genera un número de documento válido de acuerdo a si es menor o mayor de edad.
      */
+    // CÓDIGO MUERTO (YAGNI): este método no se invoca en ningún punto de la aplicación; ver DocumentGeneratorService.
     @Override
     public String generateDocument() {
         if (getUserType() == UserType.NATURAL_MINOR) {
@@ -29,7 +30,7 @@ public class NaturalPersonUser extends AbstractUser {
             return String.valueOf(generated);
         } else {
             // Documento de mayor de edad: longitud entre 9 y 11 dígitos (cédula o pasaporte)
-            // Genera por defecto un número de 10 dígitos (p. ej., entre 1,000,000,000 y 9,999,999,999)
+            // Genera por defecto un número de 9 dígitos (entre 100,000,000 y 999,999,999)
             long min = 100000000L;
             long max = 999999999L;
             long generated = min + (long) (Math.random() * (max - min));

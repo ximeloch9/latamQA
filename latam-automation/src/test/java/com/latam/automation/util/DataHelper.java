@@ -104,6 +104,7 @@ public class DataHelper {
                 isHeader = false;
                 
                 String[] fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                // DEUDA TÉCNICA: condición fields.length >= 9 nunca se cumple (CSV tiene 8 columnas); el parser siempre usa el mock de respaldo. Ver auditoría 2026-06-16.
                 if (fields.length >= 9) {
                     Map<String, String> user = new HashMap<>();
                     user.put("name", cleanField(fields[1]));

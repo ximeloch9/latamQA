@@ -99,12 +99,18 @@ Al iniciar el aplicativo, se despliega una interfaz interactiva de consola con l
 ## Bonus implementados
 - [x] **Ejecución en paralelo**: Generación multihilo concurrente utilizando `ExecutorService` con hilos basados en los núcleos activos del CPU y conjuntos concurrentes (`ConcurrentHashMap.newKeySet()`) para preservar la integridad de unicidad en memoria. Se activa automáticamente cuando la cantidad a generar es igual o superior a 100 registros.
 - [x] **Gestión de datos históricos**: Métodos de administración para consulta y eliminación por antigüedad (`deleteByCreatedBefore`), además de visualización interactiva y vaciado completo.
-- [x] **Envío por correo**: Soporte de cliente SMTP integrado con **JavaMail API** para enviar el reporte de datos a cualquier casilla de correo electrónico. Ya se encuentra configurado y habilitado por defecto usando Gmail SMTP en [config.properties](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/resources/config.properties).
+- [x] **Envío por correo**: Soporte de cliente SMTP integrado con **JavaMail API** para enviar el reporte de datos a cualquier casilla de correo electrónico. Ya se encuentra configurado y habilitado por defecto usando Gmail SMTP en [config.properties](file:///Users/Marlopch/Documents/LatamQAPOC/data-generator/src/main/resources/config.properties). *Nota: Se configuró el correo personal como remitente para evitar configuraciones adicionales; se reconoce que esto no es una buena práctica y queda registrado como deuda técnica.*
 
 ## Resultado esperado
 Al ejecutarse el proceso de generación:
 1. Se crea un archivo de base de datos SQLite local `data-generator.db` (a menos que se modifique su ruta) con la tabla `users` cargada y actualizada.
 2. Se exporta un reporte estructurado y delimitado por comas (CSV) en la ruta `output/datos_latam.csv` conteniendo las columnas de usuario correspondientes.
+
+## 🔍 Deuda Técnica / Known Issues
+
+> [!WARNING]
+> - **Credencial SMTP en texto plano**: El archivo `config.properties` contiene una credencial SMTP estática en texto plano. Se debe migrar esta configuración a variables de entorno o a un gestor de secretos y la credencial actual debe ser rotada.
+> - **Código muerto (YAGNI)**: Los métodos `generateDocument()` definidos en los modelos (`NaturalPersonUser` y `CompanyUser`) son requeridos por la interfaz `Documentable` pero nunca se invocan en el flujo de la aplicación. La generación de documentos es orquestada directamente por `DocumentGeneratorService`.
 
 ## Autor
 Senior QA Automation Engineer — Latam QA

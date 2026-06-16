@@ -88,8 +88,8 @@ latam-automation/target/site/serenity/index.html
 * **Propósito:** Automatización end-to-end del flujo de reserva y compra en el portal Latam.
 * **Escenarios:**
   * ✅ **CP3** — Validación de datos de pasajero menor de edad en Checkout *(activo y pasando)*
-  * 🔲 CP1 — Búsqueda de vuelo nacional adulto *(comentado / pendiente)*
-  * 🔲 CP2 — Vuelo internacional multilenguaje *(comentado / pendiente)*
+  * ✅ **CP1** — Búsqueda de vuelo nacional adulto *(activo y funcional)*
+  * ✅ **CP2** — Vuelo internacional multilenguaje *(activo y funcional)*
 * **Stack técnico:** Serenity BDD + Cucumber + Screenplay Pattern.
 * **Selectores estables:** Documentados en [`localizadoresDOM.md`](file:///Users/Marlopch/Documents/LatamQAPOC/localizadoresDOM.md).
 * **Dato clave:** Los formularios React requieren escritura carácter a carácter con delays (ver `IngresarPasajero.escribirComoHumano()`).

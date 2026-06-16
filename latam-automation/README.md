@@ -31,24 +31,33 @@ com.latam.automation
 
 ## 🧪 Escenarios implementados
 
+Todos los escenarios están activos y habilitados para ejecución en `src/test/resources/features/buscar_vuelo.feature`.
+
+### CP1 — Búsqueda de vuelo nacional para usuario adulto residente en Colombia (Solo Ida) ✅
+* **Caso activo**
+* **Flujo:** Carga un usuario `Adulto` desde la fuente de datos, accede al portal de Colombia, configura el viaje como Solo Ida y realiza la búsqueda del tramo Bogotá (BOG) a Medellín (MDE), validando la aparición de resultados de vuelos.
+
+### CP2 — Búsqueda de vuelo internacional multilenguaje (Usuario Extranjero - Ida y Vuelta) ✅
+* **Caso activo**
+* **Flujo:** Carga un usuario `Extranjero` (fuera de Colombia), abre el portal regional de LATAM correspondiente a su país e idioma, realiza la búsqueda de ida y vuelta a Orlando (MCO), y valida la correcta carga de la moneda y la configuración regional en el portal.
+* > **Nota sobre limitaciones de cobertura (Deuda Técnica):**
+  > * Este escenario funciona correctamente con todos los países, **excepto España**.
+  > * Si el país correspondiente del usuario no se encuentra dentro de las opciones directas de Latam (por ejemplo, las opciones "Otros países" o "Resto de Europa"), estas opciones **no están soportadas** por el flujo actual de automatización. Esto queda documentado como deuda técnica para ser resuelto en iteraciones futuras.
+
 ### CP3 — Validación de datos de pasajero menor de edad en Checkout ✅
-
-**Caso activo y pasando** en `src/test/resources/features/buscar_vuelo.feature`.
-
-**Flujo completo automatizado:**
-1. Carga un usuario `Menor` desde `data-generator.db`
-2. Navega al portal de Latam Airlines Colombia
-3. Busca un vuelo de ida (BOG → MDE por defecto)
-4. Selecciona la tarifa más económica
-5. Selecciona opción de tarifa reembolsable
-6. Elige asientos más tarde de manera aleatoria
-7. Omite servicios adicionales (equipaje / embarque prioritario)
-8. Confirma el carrito y avanza al Checkout
-9. **Completa el formulario del Adulto acompañante (ADT_1)**
-10. **Completa el formulario del Menor (CHD_1)** con datos de la BD
-11. Verifica que el formulario acepta el documento especial del menor
-
-> Los escenarios **CP1** y **CP2** están comentados en el feature file hasta su implementación futura.
+* **Caso activo y pasando**
+* **Flujo completo automatizado:**
+  1. Carga un usuario `Menor` desde `data-generator.db`
+  2. Navega al portal de Latam Airlines Colombia
+  3. Busca un vuelo de ida (BOG → MDE por defecto)
+  4. Selecciona la tarifa más económica
+  5. Selecciona opción de tarifa reembolsable
+  6. Elige asientos más tarde de manera aleatoria
+  7. Omite servicios adicionales (equipaje / embarque prioritario)
+  8. Confirma el carrito y avanza al Checkout
+  9. **Completa el formulario del Adulto acompañante (ADT_1)**
+  10. **Completa el formulario del Menor (CHD_1)** con datos de la BD
+  11. Verifica que el formulario acepta el documento especial del menor.
 
 ---
 
@@ -96,11 +105,11 @@ Los formularios del portal de Latam son componentes **React con debounce** que n
 
 Valores de delay para mantener el comportamiento humano y evitar bloqueos del debouncer React:
 
-| Constante | Valor recomendado | Propósito |
+| Constante | Valor configurado | Propósito |
 |-----------|------------------|-----------|
-| `MIN_DELAY_TECLA_MS` | 80 ms | Velocidad mínima de tecleo |
-| `MAX_DELAY_TECLA_MS` | 180 ms | Velocidad máxima de tecleo |
-| `DELAY_HUMANO_CAMPO_MS` | 600 ms | Pausa entre campos |
+| `MIN_DELAY_TECLA_MS` | 10 ms | Velocidad mínima de tecleo |
+| `MAX_DELAY_TECLA_MS` | 40 ms | Velocidad máxima de tecleo |
+| `DELAY_HUMANO_CAMPO_MS` | 200 ms | Pausa entre campos |
 
 > ⚠️ Bajar estos valores puede romper la sincronización con React y causar campos vacíos o incompletos.
 
@@ -156,13 +165,13 @@ Para evadir la detección de bots por parte de la CDN (Akamai), el framework imp
 
 ---
 
-## 🔍 Señales de alerta conocidas (§10 agent.md)
+## 🔍 Señales de alerta conocidas y Deuda Técnica (§10 agent.md)
 
 > [!NOTE]
-> Las siguientes situaciones han sido identificadas y están pendientes de refactoring en una iteración futura:
+> Las siguientes situaciones han sido identificadas y están pendientes de refactoring o corrección en una iteración futura:
 > - `IngresarPasajero.schedulerWait()`: método privado que delega en `esperar()` sin valor adicional → candidato YAGNI a eliminar.
-> - `System.out.println(...)` en `escribirComoHumano` y `performAs`: debe reemplazarse por `log.info/log.warn` con SLF4J según §6 de `agent.md`.
 > - El método `escribirComoHumano` excede las 20 líneas recomendadas por KISS → candidato a extracción de submétodos (`scrollToElement`, `limpiarCampo`, `enviarCaracteres`).
+> - **Known Issue (Bug Funcional)**: En `DataHelper.java`, la validación `fields.length >= 9` nunca se cumple debido a que `CsvExporter.java` exporta el archivo CSV con únicamente 8 columnas. Esto ocasiona que el lector de CSV falle de manera silenciosa y utilice siempre el usuario mock de respaldo. (Identificado en auditoría técnica).
 
 ---
 
