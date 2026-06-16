@@ -80,7 +80,7 @@ public class BuscarVuelo implements Task {
     }
 
     private void descartarOverlaysIniciales(Actor actor) {
-        esperar(3000);
+        esperar(1000);
         try {
             WebDriver driver = BrowseTheWeb.as(actor).getDriver();
             JavascriptExecutor js = (JavascriptExecutor) driver;

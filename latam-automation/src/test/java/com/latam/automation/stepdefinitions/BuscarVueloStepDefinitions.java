@@ -133,9 +133,15 @@ public class BuscarVueloStepDefinitions {
         verificarCargaResultados();
     }
 
+    private String normalizarTexto(String texto) {
+        if (texto == null) return "";
+        String temp = java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD);
+        return temp.replaceAll("[^\\p{ASCII}]", "");
+    }
+
     @Cuando("el actor ingresa al portal regional según su país de origen e idioma")
     public void ingresarPortalRegional() {
-        String pais = testUser.get("country");
+        String pais = normalizarTexto(testUser.get("country"));
         String idioma = testUser.get("language");
         String url = LatamSearchPage.URL;
 
@@ -153,7 +159,7 @@ public class BuscarVueloStepDefinitions {
                     : "https://www.latamairlines.com/co/es";
         }
 
-        log.info("Navegando al portal regional para país: {} e idioma: {}. URL: {}", pais, idioma, url);
+        log.info("Navegando al portal regional para país: {} e idioma: {}. URL: {}", testUser.get("country"), idioma, url);
         theActorInTheSpotlight().attemptsTo(
                 Open.url(url));
     }
@@ -178,9 +184,7 @@ public class BuscarVueloStepDefinitions {
         // 1. Esperar primero a que la página de resultados cargue por completo
         verificarCargaResultados();
 
-        String pais = testUser.get("country");
-        // Normalizar tildes (ej. Perú -> Peru)
-        String paisNorm = pais != null ? pais.replace("ú", "u").replace("Ú", "U") : "";
+        String paisNorm = normalizarTexto(testUser.get("country"));
 
         // 2. Ejecutar las aserciones regionales con el DOM ya cargado
         if ("Peru".equalsIgnoreCase(paisNorm)) {
